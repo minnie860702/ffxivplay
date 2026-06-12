@@ -92,7 +92,7 @@ body {
 @keyframes shrinkBar { from { width: 100%; } to { width: 0%; } }
 
 .image-wrapper { position: relative; width: 100%; padding-top: 75%; /* 4:3 Aspect ratio */ background: #000; overflow: hidden; }
-.q-illust { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(2.5); transform-origin: center 60%; transition: opacity 0.3s ease; }
+.q-illust { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(2.5); transform-origin: center 60%; transition: opacity 0.3s ease; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; }
 
 /* 隱藏特效 */
 .hidden-overlay {

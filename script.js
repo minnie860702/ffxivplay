@@ -45,7 +45,7 @@ function renderQuestion(idx) {
   const imgEl = document.getElementById('q-illust');
   imgEl.src = q.image;
   
-  const scale = 3.5 + Math.random() * 1.5;
+  const scale = 2.2 + Math.random() * 1.0; // 放大 2.2 到 3.2 倍，避免過度放大導致模糊
   const originX = 30 + Math.random() * 40;
   const originY = 55 + Math.random() * 30;
   imgEl.style.transform = `scale(${scale})`;
