@@ -6,6 +6,7 @@ let timerTimeout = null;
 let activeQuestions = [];
 let adShown = false;
 let adTimeout = null;
+let userAnswers = [];
 
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -18,6 +19,7 @@ function startQuiz() {
   score = 0;
   currentQ = 0;
   adShown = false;
+  userAnswers = [];
   
   // Filter out missing images and pick 10 random questions
   const validQuestions = questions.filter(q => q.image !== 'q9.png' && q.image !== 'q37.png');
@@ -96,7 +98,7 @@ function renderQuestion(idx) {
   clearTimeout(timerTimeout);
   timerTimeout = setTimeout(() => {
     if (!imgWrapper.classList.contains('hidden')) {
-      imgWrapper.classList.add('hidden');
+      checkAnswer(-1, null); // Timeout case
     }
   }, 600);
 }
@@ -109,11 +111,19 @@ function checkAnswer(selectedIndex, btnElement) {
   const correctIndex = q.options.indexOf(q.name);
   const isCorrect = selectedIndex === correctIndex;
   
+  userAnswers.push({
+    questionNum: currentQ + 1,
+    image: q.image,
+    correctName: q.name,
+    isCorrect: isCorrect,
+    userSelected: selectedIndex !== -1 ? q.options[selectedIndex] : null
+  });
+
   if (isCorrect) {
     score++;
-    btnElement.classList.add('correct');
+    if (btnElement) btnElement.classList.add('correct');
   } else {
-    btnElement.classList.add('wrong');
+    if (btnElement) btnElement.classList.add('wrong');
     buttons[correctIndex].classList.add('correct');
   }
   
@@ -194,6 +204,31 @@ function showResult() {
   document.getElementById('result-hero-img').src = img;
   document.getElementById('res-desc').textContent = desc;
   
+  // 渲染答題回顧
+  const sumWrap = document.getElementById('result-summary');
+  sumWrap.innerHTML = '';
+  userAnswers.forEach((ans, i) => {
+    const isCorrectStr = ans.isCorrect ? '<span class="sum-icon correct">✅</span>' : '<span class="sum-icon wrong">❌</span>';
+    // 擷取名稱的中文部分 (如果有括號)
+    const shortName = ans.correctName.split(' (')[0];
+    const html = `
+      <div class="summary-item" id="sum-item-${i}" onclick="toggleSummary(${i})">
+        <div class="summary-header">
+          <span class="sum-qnum">Q${ans.questionNum}</span>
+          <span class="sum-name">${shortName}</span>
+          ${isCorrectStr}
+          <span class="sum-arrow">▼</span>
+        </div>
+        <div class="summary-body">
+          <div class="sum-img-wrapper">
+            <img src="${ans.image}" alt="Q${ans.questionNum}" class="sum-img">
+          </div>
+        </div>
+      </div>
+    `;
+    sumWrap.insertAdjacentHTML('beforeend', html);
+  });
+  
   showScreen('result');
   
   // 3 秒後自動彈出插頁廣告 (只觸發一次)
@@ -204,6 +239,13 @@ function showResult() {
         showAdInterstitial();
       }
     }, 3000);
+  }
+}
+
+function toggleSummary(index) {
+  const el = document.getElementById('sum-item-' + index);
+  if (el) {
+    el.classList.toggle('expanded');
   }
 }
 
@@ -361,9 +403,14 @@ async function saveResultImage() {
     const actionBtns = card.querySelector('.action-buttons');
     const shareBtns = card.querySelector('.share-buttons');
     const inlineAd = card.querySelector('.result-inline-ad');
+    const summaryTitle = card.querySelector('.summary-title');
+    const summaryWrap = card.querySelector('.result-summary');
+    
     if (actionBtns) actionBtns.style.display = 'none';
     if (shareBtns) shareBtns.style.display = 'none';
     if (inlineAd) inlineAd.style.display = 'none';
+    if (summaryTitle) summaryTitle.style.display = 'none';
+    if (summaryWrap) summaryWrap.style.display = 'none';
 
     // Fix scaling to improve clarity
     const canvas = await html2canvas(card, { 
@@ -382,6 +429,8 @@ async function saveResultImage() {
     if (actionBtns) actionBtns.style.display = '';
     if (shareBtns) shareBtns.style.display = '';
     if (inlineAd) inlineAd.style.display = '';
+    if (summaryTitle) summaryTitle.style.display = '';
+    if (summaryWrap) summaryWrap.style.display = '';
 
     if (isLineIAB() || isMobile()) {
       const dataUrl = canvas.toDataURL('image/png');
@@ -400,9 +449,13 @@ async function saveResultImage() {
     const actionBtns = card.querySelector('.action-buttons');
     const shareBtns = card.querySelector('.share-buttons');
     const inlineAd = card.querySelector('.result-inline-ad');
+    const summaryTitle = card.querySelector('.summary-title');
+    const summaryWrap = card.querySelector('.result-summary');
     if (actionBtns) actionBtns.style.display = '';
     if (shareBtns) shareBtns.style.display = '';
     if (inlineAd) inlineAd.style.display = '';
+    if (summaryTitle) summaryTitle.style.display = '';
+    if (summaryWrap) summaryWrap.style.display = '';
   } finally {
     _saving = false;
     btn.innerHTML = origHTML;
