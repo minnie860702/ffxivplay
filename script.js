@@ -30,8 +30,21 @@ function startQuiz() {
     preload.src = q.image;
   });
   
-  showScreen('quiz');
-  renderQuestion(currentQ);
+  showScreen('countdown');
+  const countEl = document.getElementById('countdown-number');
+  let count = 3;
+  countEl.textContent = count;
+  
+  const timer = setInterval(() => {
+    count--;
+    if (count > 0) {
+      countEl.textContent = count;
+    } else {
+      clearInterval(timer);
+      showScreen('quiz');
+      renderQuestion(currentQ);
+    }
+  }, 1000);
 }
 
 function renderQuestion(idx) {

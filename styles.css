@@ -327,3 +327,31 @@ body {
   color: var(--text-muted);
   margin-top: 10px;
 }
+
+/* ==================================================
+   倒數畫面 Countdown
+================================================== */
+.countdown-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+}
+.countdown-number {
+  font-size: 6rem;
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 0 0 30px var(--accent-glow);
+  animation: pulseCount 1s infinite;
+}
+.countdown-text {
+  font-size: 1.2rem;
+  color: var(--muted);
+  margin-top: 10px;
+}
+@keyframes pulseCount {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}

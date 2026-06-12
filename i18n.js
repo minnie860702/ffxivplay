@@ -16,7 +16,8 @@ window.__i18n = {
       result_score_title: '挑戰結束',
       btn_retry: '再挑戰一次',
       ad_title: '為您結算成績中...',
-      ad_timer: function(n) { return `將在 <span id="ad-sec" style="color:var(--accent); font-weight:bold;">${n}</span> 秒後顯示結果`; }
+      ad_timer: function(n) { return `將在 <span id="ad-sec" style="color:var(--accent); font-weight:bold;">${n}</span> 秒後顯示結果`; },
+      countdown_text: '載入中...'
     },
     'en': {
       badge: '👁️ Detail Guessing Quiz',
@@ -30,7 +31,8 @@ window.__i18n = {
       result_score_title: 'Challenge Complete',
       btn_retry: 'Try Again',
       ad_title: 'Calculating your results...',
-      ad_timer: function(n) { return `Showing results in <span id="ad-sec" style="color:var(--accent); font-weight:bold;">${n}</span>s`; }
+      ad_timer: function(n) { return `Showing results in <span id="ad-sec" style="color:var(--accent); font-weight:bold;">${n}</span>s`; },
+      countdown_text: 'Loading...'
     }
   },
   resultText: {
