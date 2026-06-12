@@ -73,9 +73,10 @@ function renderQuestion(idx) {
   tempImg.onload = () => { imgEl.src = q.image; };
   tempImg.src = q.image;
   
-  const scale = 2.2 + Math.random() * 1.0; // 放大 2.2 到 3.2 倍，避免過度放大導致模糊
-  const originX = 30 + Math.random() * 40;
-  const originY = 55 + Math.random() * 30;
+  // 讓每次出現的局部圖位置大幅度隨機，增加重玩樂趣 (可能出現武器、手套、鞋子等)
+  const scale = 2.5 + Math.random() * 1.5; // 放大 2.5 到 4.0 倍
+  const originX = 15 + Math.random() * 70; // X 軸 15% ~ 85%
+  const originY = 10 + Math.random() * 80; // Y 軸 10% ~ 90%
   imgEl.style.transform = `scale(${scale})`;
   imgEl.style.transformOrigin = `${originX}% ${originY}%`;
   
@@ -98,7 +99,7 @@ function renderQuestion(idx) {
   clearTimeout(timerTimeout);
   timerTimeout = setTimeout(() => {
     if (!imgWrapper.classList.contains('hidden')) {
-      checkAnswer(-1, null); // Timeout case
+      imgWrapper.classList.add('hidden');
     }
   }, 600);
 }
@@ -116,7 +117,8 @@ function checkAnswer(selectedIndex, btnElement) {
     image: q.image,
     correctName: q.name,
     isCorrect: isCorrect,
-    userSelected: selectedIndex !== -1 ? q.options[selectedIndex] : null
+    userSelected: selectedIndex !== -1 ? q.options[selectedIndex] : null,
+    options: q.options
   });
 
   if (isCorrect) {
@@ -201,7 +203,8 @@ function showResult() {
     desc = _resultTexts[0];
   }
   
-  document.getElementById('result-hero-img').src = img;
+  const heroImg = document.getElementById('result-hero-img');
+  heroImg.src = img;
   document.getElementById('res-desc').textContent = desc;
   
   // 渲染答題回顧
@@ -209,19 +212,28 @@ function showResult() {
   sumWrap.innerHTML = '';
   userAnswers.forEach((ans, i) => {
     const isCorrectStr = ans.isCorrect ? '<span class="sum-icon correct">✅</span>' : '<span class="sum-icon wrong">❌</span>';
-    // 擷取名稱的中文部分 (如果有括號)
-    const shortName = ans.correctName.split(' (')[0];
+    const fullName = ans.correctName;
     const html = `
       <div class="summary-item" id="sum-item-${i}" onclick="toggleSummary(${i})">
         <div class="summary-header">
           <span class="sum-qnum">Q${ans.questionNum}</span>
-          <span class="sum-name">${shortName}</span>
+          <span class="sum-name">${fullName}</span>
           ${isCorrectStr}
           <span class="sum-arrow">▼</span>
         </div>
         <div class="summary-body">
           <div class="sum-img-wrapper">
             <img src="${ans.image}" alt="Q${ans.questionNum}" class="sum-img">
+          </div>
+          <div class="sum-options">
+            ${ans.options.map(opt => {
+              const isCorrectOpt = opt === ans.correctName;
+              const isUserOpt = opt === ans.userSelected;
+              let btnClass = 'sum-opt-btn';
+              if (isCorrectOpt) btnClass += ' correct';
+              else if (isUserOpt) btnClass += ' wrong';
+              return `<div class="${btnClass}">${opt}</div>`;
+            }).join('')}
           </div>
         </div>
       </div>
@@ -381,115 +393,45 @@ function showShareToast(msg) {
   }, 4000);
 }
 
-// ── 結果圖儲存 (html2canvas) ──
+// ── 結果圖儲存 (使用預先生成的靜態圖片) ──
 let _saving = false;
 async function saveResultImage() {
   if (_saving) return;
-  if (typeof html2canvas === 'undefined') {
-    showShareToast('Error: html2canvas is not loaded');
-    return;
-  }
-
   _saving = true;
+  
   const btn = document.querySelector('.share-save');
   const origHTML = btn.innerHTML;
-  btn.innerHTML = '...';
+  btn.innerHTML = '<span class="loading-spinner"></span>';
   btn.disabled = true;
 
   try {
-    const card = document.getElementById('result-card');
+    // 從預先載入的 base64 檔案中直接拿圖片資料 (完全迴避 CORS 與 fetch 問題)
+    const shareImages = window.__lang === 'en' ? window.__shareImages_en : window.__shareImages;
+    const dataUrl = shareImages ? shareImages[score] : null;
     
-    // Hide buttons and ads temporarily
-    const actionBtns = card.querySelector('.action-buttons');
-    const shareBtns = card.querySelector('.share-buttons');
-    const inlineAd = card.querySelector('.result-inline-ad');
-    const summaryTitle = card.querySelector('.summary-title');
-    const summaryWrap = card.querySelector('.result-summary');
+    if (!dataUrl) throw new Error("Base64 image not found for score: " + score);
+
+    // 直接觸發下載
+    const link = document.createElement('a');
+    link.download = `ff14-quiz-score-${score}.png`;
+    link.href = dataUrl;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
     
-    if (actionBtns) actionBtns.style.display = 'none';
-    if (shareBtns) shareBtns.style.display = 'none';
-    if (inlineAd) inlineAd.style.display = 'none';
-    if (summaryTitle) summaryTitle.style.display = 'none';
-    if (summaryWrap) summaryWrap.style.display = 'none';
-
-    // Fix scaling to improve clarity
-    const canvas = await html2canvas(card, { 
-      backgroundColor: '#141423',
-      scale: 2, // High resolution
-      useCORS: true,
-      ignoreElements: (element) => {
-        if (element.classList && element.classList.contains('result-inline-ad')) {
-          return true;
-        }
-        return false;
-      }
-    });
-
-    // Restore buttons and ads
-    if (actionBtns) actionBtns.style.display = '';
-    if (shareBtns) shareBtns.style.display = '';
-    if (inlineAd) inlineAd.style.display = '';
-    if (summaryTitle) summaryTitle.style.display = '';
-    if (summaryWrap) summaryWrap.style.display = '';
-
-    if (isLineIAB() || isMobile()) {
-      const dataUrl = canvas.toDataURL('image/png');
-      showImageOverlay(dataUrl);
-    } else {
-      downloadCanvasImage(canvas, 'ff14_quiz_result.png');
-      showShareToast(window.__lang === 'zh-TW' ? '✅ 已儲存圖片！' : '✅ Image saved!');
-    }
+    setTimeout(() => {
+      document.body.removeChild(link);
+    }, 500);
+    
+    showShareToast(window.__lang === 'zh-TW' ? '✅ 已儲存圖片！' : '✅ Image saved!');
   } catch (e) {
-    console.error(e);
-    alert("html2canvas error: " + e.message);
+    console.error('Save image failed:', e);
     showShareToast(window.__lang === 'zh-TW' ? '⚠️ 圖片儲存失敗，請手動截圖' : '⚠️ Failed to save image, please screenshot');
-    
-    // Ensure buttons are restored even on failure
-    const card = document.getElementById('result-card');
-    const actionBtns = card.querySelector('.action-buttons');
-    const shareBtns = card.querySelector('.share-buttons');
-    const inlineAd = card.querySelector('.result-inline-ad');
-    const summaryTitle = card.querySelector('.summary-title');
-    const summaryWrap = card.querySelector('.result-summary');
-    if (actionBtns) actionBtns.style.display = '';
-    if (shareBtns) shareBtns.style.display = '';
-    if (inlineAd) inlineAd.style.display = '';
-    if (summaryTitle) summaryTitle.style.display = '';
-    if (summaryWrap) summaryWrap.style.display = '';
   } finally {
     _saving = false;
     btn.innerHTML = origHTML;
     btn.disabled = false;
   }
-}
-
-function downloadCanvasImage(canvas, filename) {
-  try {
-    canvas.toBlob(function(blob) {
-      if (!blob) { fallbackDataURLDownload(canvas, filename); return; }
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = filename;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(blobUrl); }, 500);
-    }, 'image/png');
-  } catch(e) {
-    fallbackDataURLDownload(canvas, filename);
-  }
-}
-
-function fallbackDataURLDownload(canvas, filename) {
-  const dataUrl = canvas.toDataURL('image/png');
-  const a = document.createElement('a');
-  a.href = dataUrl;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { document.body.removeChild(a); }, 500);
 }
 
 function showImageOverlay(dataUrl) {

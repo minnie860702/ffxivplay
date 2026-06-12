@@ -432,6 +432,30 @@ body {
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.1);
 }
+.sum-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+.sum-opt-btn {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.9rem;
+  text-align: left;
+}
+.sum-opt-btn.correct {
+  background: rgba(74,222,128,0.2);
+  border-color: var(--correct);
+  color: var(--correct);
+}
+.sum-opt-btn.wrong {
+  background: rgba(248,113,113,0.2);
+  border-color: var(--wrong);
+  color: var(--wrong);
+}
 
 /* Expanded state */
 .summary-item.expanded .summary-body {

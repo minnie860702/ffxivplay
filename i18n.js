@@ -72,7 +72,7 @@ window.setLanguage = function(lang) {
   });
 
   // 純文字欄位用 textContent
-  ['badge', 'btn_start', 'q_text', 'q_hint', 'hidden_overlay', 'result_score_title', 'btn_retry', 'ad_title'].forEach(function(key) {
+  ['badge', 'btn_start', 'q_text', 'q_hint', 'hidden_overlay', 'result_score_title', 'btn_retry', 'ad_title', 'countdown_text', 'summary_title'].forEach(function(key) {
     document.querySelectorAll('[data-i18n="' + key + '"]').forEach(function(el) {
       el.textContent = ui[key];
     });
