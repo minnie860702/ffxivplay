@@ -24,6 +24,12 @@ function startQuiz() {
   const shuffled = [...validQuestions].sort(() => 0.5 - Math.random());
   activeQuestions = shuffled.slice(0, 10);
   
+  // Preload all 10 images to prevent delay and flashing
+  activeQuestions.forEach(q => {
+    const preload = new Image();
+    preload.src = q.image;
+  });
+  
   showScreen('quiz');
   renderQuestion(currentQ);
 }
@@ -43,7 +49,14 @@ function renderQuestion(idx) {
   
   imgWrapper.classList.remove('hidden');
   const imgEl = document.getElementById('q-illust');
-  imgEl.src = q.image;
+  
+  // 防止上一題的圖片殘留閃爍，先換成透明像素
+  imgEl.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+  
+  // 載入完成後才真正顯示新圖片
+  const tempImg = new Image();
+  tempImg.onload = () => { imgEl.src = q.image; };
+  tempImg.src = q.image;
   
   const scale = 2.2 + Math.random() * 1.0; // 放大 2.2 到 3.2 倍，避免過度放大導致模糊
   const originX = 30 + Math.random() * 40;
